@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import java.io.ByteArrayInputStream;
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
@@ -23,15 +24,19 @@ public class AliOssUtil {
      * 文件上传
      *
      * @param bytes
-     * @param objectName
+     * @param originName
      * @return
      */
-    public String upload(byte[] bytes, String objectName) {
+    public String upload(byte[] bytes, String originName) {
 
         // 创建OSSClient实例。
         OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
-
+        String objectName=null;
         try {
+            //截取文件名后缀
+            String suffix = originName.substring(originName.lastIndexOf("."));
+            //构造新文件名
+            objectName= UUID.randomUUID().toString()+suffix;
             // 创建PutObject请求。
             ossClient.putObject(bucketName, objectName, new ByteArrayInputStream(bytes));
         } catch (OSSException oe) {
