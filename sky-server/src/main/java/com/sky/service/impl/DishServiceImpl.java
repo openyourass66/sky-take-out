@@ -91,6 +91,12 @@ public class DishServiceImpl implements DishService {
         //根据菜品ids批量删除口味
         dishFlavorMapper.deleteByDishIds(ids);
     }
+
+    /**
+     * 根据id查询菜品和对应的口味
+     * @param id
+     * @return
+     */
     @Override
     public DishVO getByIdWithFlavor(Long id){
         //获取菜品信息
@@ -127,11 +133,28 @@ public class DishServiceImpl implements DishService {
             dishFlavorMapper.insertBatch(flavors);
         }
     }
+    /**
+     * 启用、禁用菜品
+     * @param status
+     * @param id
+     */
     @Override
     public void startOrStop(Integer status, Long id){
         Dish dish = new Dish();
         dish.setStatus(status);
         dish.setId(id);
         dishMapper.update(dish);
+    }
+    /**
+     * 根据分类id查询菜品
+     * @param categoryId
+     * @return
+     */
+    @Override
+    public List<Dish> queryByCategoryId(Long categoryId){
+        Dish dish = new Dish();
+        dish.setCategoryId(categoryId);
+        dish.setStatus(StatusConstant.ENABLE);
+        return dishMapper.list(dish);
     }
 }
