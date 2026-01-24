@@ -26,7 +26,7 @@ import java.util.List;
 import static com.sky.constant.PasswordConstant.DEFAULT_PASSWORD;
 
 @Service
-public class EmployeeServiceImpl implements EmployeeService {
+public class   EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
     private EmployeeMapper employeeMapper;
