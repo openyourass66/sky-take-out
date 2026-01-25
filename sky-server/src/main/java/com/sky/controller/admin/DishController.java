@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.Cacheable;
 
 import java.util.List;
 import java.util.Set;
@@ -115,6 +116,7 @@ public class DishController {
      */
     @GetMapping("/list")
     @ApiOperation("根据分类id查询菜品")
+    @Cacheable(value = "dish_*")
     public Result queryByCategoryId(Long categoryId){
         log.info("根据分类id查询菜品：{}",categoryId);
         //构造redis中的key
@@ -122,7 +124,7 @@ public class DishController {
         List<DishVO> list = (List<DishVO>)redisTemplate.opsForValue().get(key);
         //先查询redis缓存
         if(list != null&& list.size() > 0){
-            return Result.success(list);
+            return Result.success (list);
         }
         Dish dish = new Dish();
         dish.setCategoryId(categoryId);
