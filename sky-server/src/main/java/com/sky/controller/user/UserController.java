@@ -34,6 +34,5 @@ public class UserController {
         log.info("用户登录：{}", userLoginDTO);
         UserLoginVO userLoginVO =userService.wxlogin(userLoginDTO);
         return Result.success(userLoginVO);
-
     }
 }
