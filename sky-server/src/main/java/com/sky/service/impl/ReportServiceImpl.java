@@ -4,6 +4,8 @@ import com.sky.entity.Orders;
 import com.sky.mapper.OrderMapper;
 import com.sky.service.ReportService;
 import com.sky.vo.TurnoverReportVO;
+import com.sky.vo.UserReportVO;
+import io.swagger.models.auth.In;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,11 @@ import java.util.Map;
 public class ReportServiceImpl implements ReportService {
     @Autowired
     private OrderMapper orderMapper;
+    /**
+     * 营业额统计
+     * @param begin
+     * @param end
+     */
 
     @Override
     public TurnoverReportVO getTurnoverStatistics(LocalDate begin, LocalDate end) {
@@ -48,6 +55,44 @@ public class ReportServiceImpl implements ReportService {
                 .builder()
                 .dateList(StringUtils.join(dateList, ","))
                 .turnoverList(StringUtils.join(turnoverList, ","))
+                .build();
+    }
+    /**
+     * 用户统计
+     * @param begin
+     * @param end
+     */
+    @Override
+    public UserReportVO userStatistics(LocalDate begin, LocalDate end){
+        List<LocalDate> dateList = new ArrayList<>();
+        dateList.add(begin);
+        LocalDate temp=begin;
+        while (!temp.equals(end)) {
+            temp = temp.plusDays(1);
+            dateList.add(temp);
+        }
+        List<Integer> newUserList = new ArrayList<>();//新增用户数
+        List<Integer> totalUserList = new ArrayList<>();//总用户数
+        for (LocalDate date : dateList) {
+            LocalDateTime beginTime = LocalDateTime.of(date, LocalTime.MIN);
+            LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
+
+            Map map = new HashMap();
+            map.put("end", endTime);
+            //总用户数量
+            Integer totalUser = orderMapper.countByMap(map);
+            map.put("begin", beginTime);
+            //新增用户数量
+            Integer newUser = orderMapper.countByMap(map);
+
+            totalUserList.add(totalUser);
+            newUserList.add(newUser);
+        }
+        return UserReportVO
+                .builder()
+                .dateList(StringUtils.join(dateList, ","))
+                .totalUserList(StringUtils.join(totalUserList, ","))
+                .newUserList(StringUtils.join(newUserList, ","))
                 .build();
     }
 }
