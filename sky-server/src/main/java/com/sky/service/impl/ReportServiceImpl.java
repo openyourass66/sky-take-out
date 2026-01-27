@@ -2,7 +2,9 @@ package com.sky.service.impl;
 
 import com.sky.entity.Orders;
 import com.sky.mapper.OrderMapper;
+import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
+import com.sky.vo.OrderReportVO;
 import com.sky.vo.TurnoverReportVO;
 import com.sky.vo.UserReportVO;
 import io.swagger.models.auth.In;
@@ -22,6 +24,8 @@ import java.util.Map;
 public class ReportServiceImpl implements ReportService {
     @Autowired
     private OrderMapper orderMapper;
+    @Autowired
+    private UserMapper UserMapper;
     /**
      * 营业额统计
      * @param begin
@@ -63,7 +67,7 @@ public class ReportServiceImpl implements ReportService {
      * @param end
      */
     @Override
-    public UserReportVO userStatistics(LocalDate begin, LocalDate end){
+    public UserReportVO getUserStatistics(LocalDate begin, LocalDate end){
         List<LocalDate> dateList = new ArrayList<>();
         dateList.add(begin);
         LocalDate temp=begin;
@@ -80,10 +84,10 @@ public class ReportServiceImpl implements ReportService {
             Map map = new HashMap();
             map.put("end", endTime);
             //总用户数量
-            Integer totalUser = orderMapper.countByMap(map);
+            Integer totalUser = UserMapper.countByMap(map);
             map.put("begin", beginTime);
             //新增用户数量
-            Integer newUser = orderMapper.countByMap(map);
+            Integer newUser = UserMapper.countByMap(map);
 
             totalUserList.add(totalUser);
             newUserList.add(newUser);
@@ -94,5 +98,64 @@ public class ReportServiceImpl implements ReportService {
                 .totalUserList(StringUtils.join(totalUserList, ","))
                 .newUserList(StringUtils.join(newUserList, ","))
                 .build();
+    }
+    /**
+     * 订单统计
+     * @param begin
+     * @param end
+     */
+    @Override
+    public OrderReportVO getOrdersStatistics(LocalDate begin, LocalDate end) {
+        List<LocalDate> dateList = new ArrayList<>();
+        dateList.add(begin);
+        LocalDate temp=begin;
+        while (!temp.equals(end)) {
+            temp = temp.plusDays(1);
+            dateList.add(temp);
+        }
+        //每天
+        List<Integer> orderCountList = new ArrayList<>();
+        List<Integer> validOrderCountList = new ArrayList<>();
+        for (LocalDate date : dateList) {
+            //查询每天订单数
+            LocalDateTime beginTime = LocalDateTime.of(date, LocalTime.MIN);
+            LocalDateTime endTime = LocalDateTime.of(date, LocalTime.MAX);
+            Integer orderCount = getOrderCount(beginTime, endTime, null);
+            orderCountList.add(orderCount);
+            //查询每天有效订单数
+            Integer validOrderCount = getOrderCount(beginTime, endTime, Orders.COMPLETED);
+            validOrderCountList.add(validOrderCount);
+        }
+        //订单总数
+        Integer totalOrderCount = orderCountList.stream().reduce(Integer::sum).get();
+        //有效订单数
+        Integer totalValidOrderCount = validOrderCountList.stream().reduce(Integer::sum).get();
+        Double orderCompletionRate = 0.0;
+        if (totalOrderCount!=0) {
+            orderCompletionRate=totalValidOrderCount.doubleValue() / totalOrderCount;
+        }
+        return OrderReportVO
+                .builder()
+                .dateList(StringUtils.join(dateList, ","))
+                .orderCountList(StringUtils.join(orderCountList, ","))
+                .validOrderCountList(StringUtils.join(validOrderCountList, ","))
+                .totalOrderCount(totalOrderCount)
+                .validOrderCount(totalValidOrderCount)
+                .orderCompletionRate(orderCompletionRate)
+                .build();
+    }
+    /**
+     * 查询指定时间区间内订单数量
+     * @param begin
+     * @param end
+     * @param status
+     * @return
+     */
+    private Integer getOrderCount(LocalDateTime begin, LocalDateTime end, Integer status){
+        Map map = new HashMap();
+        map.put("begin", begin);
+        map.put("end", end);
+        map.put("status", status);
+        return orderMapper.countByMap(map);
     }
 }

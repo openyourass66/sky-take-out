@@ -65,4 +65,5 @@ public interface OrderMapper {
      * @param map
      */
     Integer countByMap(Map map);
+
 }
